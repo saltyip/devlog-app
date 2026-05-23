@@ -92,9 +92,9 @@ body {
   border-right: 1px solid var(--color-surface1);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 36px);
   position: sticky;
-  top: 0;
+  top: 36px;
   z-index: 10;
   padding: 1.5rem 1.25rem;
 }
@@ -712,6 +712,99 @@ body {
 @media (max-width: 860px) {
   .home-layout {
     padding: 2rem 1.25rem;
+  }
+}
+
+/* Devlog Header — thin attribution bar */
+.devlog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 0 1.25rem;
+  background: var(--color-mantle);
+  border-bottom: 1px solid var(--color-surface0);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  flex-shrink: 0;
+}
+
+.devlog-header-left {
+  color: var(--color-text);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.devlog-header-link {
+  text-decoration: none;
+  position: relative;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-mauve) 0%,
+    var(--color-mauve) 25%,
+    #fff 45%,
+    var(--color-pink) 50%,
+    #fff 55%,
+    var(--color-mauve) 75%,
+    var(--color-mauve) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    headerShine 2s ease-in-out infinite,
+    headerGlow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(203, 166, 247, 0.6));
+}
+
+.devlog-header-link::before {
+  content: '';
+  position: absolute;
+  inset: -2px -6px;
+  border-radius: 4px;
+  background: rgba(203, 166, 247, 0.08);
+  border: 1px solid rgba(203, 166, 247, 0.15);
+  animation: headerBorderPulse 2s ease-in-out infinite;
+}
+
+.devlog-header-link:hover {
+  animation: none;
+  filter: drop-shadow(0 0 8px rgba(203, 166, 247, 0.9));
+  background: none;
+  -webkit-text-fill-color: #fff;
+}
+
+.devlog-header-link:hover::before {
+  animation: none;
+  background: rgba(203, 166, 247, 0.15);
+  border-color: var(--color-mauve);
+}
+
+@keyframes headerShine {
+  0%, 100% { background-position: 100% center; }
+  50% { background-position: 0% center; }
+}
+
+@keyframes headerGlow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(203, 166, 247, 0.4)); }
+  50% { filter: drop-shadow(0 0 10px rgba(203, 166, 247, 0.9)); }
+}
+
+@keyframes headerBorderPulse {
+  0%, 100% {
+    background: rgba(203, 166, 247, 0.05);
+    border-color: rgba(203, 166, 247, 0.1);
+  }
+  50% {
+    background: rgba(203, 166, 247, 0.12);
+    border-color: rgba(203, 166, 247, 0.3);
   }
 }
 

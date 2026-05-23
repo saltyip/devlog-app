@@ -6,6 +6,7 @@ import { useDevlog } from './hooks/useDevlog';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import Home from './components/Home';
+import DevlogHeader from './components/DevlogHeader';
 
 function AppContent({ projects, refreshProject }) {
   const location = useLocation();
@@ -54,6 +55,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <DevlogHeader />
       <Routes>
         <Route path="/*" element={<AppContent projects={projects} refreshProject={refreshProject} />} />
       </Routes>
