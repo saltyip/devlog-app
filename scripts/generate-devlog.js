@@ -157,21 +157,22 @@ const fetchProject = async (project) => {
         console.warn("Hint: Make sure GITHUB_TOKEN is configured correctly in environment variables.");
       }
       
-      // Try fallback to mock
-      const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
-      
-      if (MOCK_DEVLOGS[fallbackKey]) {
-        console.log(`Using mock fallback for ${repo}`);
-        return {
-          name,
-          repo,
-          description,
-          status: 'success',
-          files: MOCK_DEVLOGS[fallbackKey],
-          error: null,
-        };
+      // ONLY fallback to mock if NO token is configured!
+      if (!GITHUB_TOKEN) {
+        const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
+        if (MOCK_DEVLOGS[fallbackKey]) {
+          console.log(`Using mock fallback for ${repo}`);
+          return {
+            name,
+            repo,
+            description,
+            status: 'success',
+            files: MOCK_DEVLOGS[fallbackKey],
+            error: null,
+          };
+        }
       }
-      throw new Error(`Inaccessible repository (${response.status})`);
+      throw new Error(`GitHub API returned ${response.status}: ${response.statusText || 'Not Found'}`);
     }
 
     const data = await response.json();
@@ -252,19 +253,20 @@ const fetchProject = async (project) => {
   } catch (err) {
     console.error(`Error processing ${repo}:`, err.message);
     
-    // Catch-all fallback to mock
-    const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
-    
-    if (MOCK_DEVLOGS[fallbackKey]) {
-      console.log(`Using mock fallback for ${repo} due to error.`);
-      return {
-        name,
-        repo,
-        description,
-        status: 'success',
-        files: MOCK_DEVLOGS[fallbackKey],
-        error: null,
-      };
+    // ONLY fallback to mock if NO token is configured!
+    if (!GITHUB_TOKEN) {
+      const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
+      if (MOCK_DEVLOGS[fallbackKey]) {
+        console.log(`Using mock fallback for ${repo} due to error.`);
+        return {
+          name,
+          repo,
+          description,
+          status: 'success',
+          files: MOCK_DEVLOGS[fallbackKey],
+          error: null,
+        };
+      }
     }
 
     return {
