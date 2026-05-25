@@ -1,0 +1,48 @@
+{
+  "saltyip/jwt-redis-auth-api": {
+    "name": "JWT Redis Auth API",
+    "repo": "saltyip/jwt-redis-auth-api",
+    "description": "Secure REST API with refresh token rotation, Redis caching, rate limiting",
+    "status": "success",
+    "files": {
+      "middleware/auth.middleware.js": [
+        "this file takes care of the authentication or to check whether the user is actually the user\nbasically the accessToken check thingy happens here\n\n1)why middleware => cuz its used before any user process like for getProfile and updateProfile\nwe need to verify the user is really user\n\n\nworking\nreq.header.authorization has the auth header\nif valid header then -> split the header at pos 1 (AUTHORIZATION BEARER KEY ) etc form which is our token\nwe check the accessToken we verify it usign the token we got from above\nuse jwt.verify => checks the accessToken with secret key and also checks expired\nif any of it fails then returns false ans doesnt move on if it doesnt go wrong and not expired then\nit returns the userId we got from the token\nSO BASIALLY WE GET THE userID the accessToken points to (if the accessToken is valid and not expired)\nthen we put the userId we got from the token in the req.user so that other fn can know which use it is"
+      ],
+      "middleware/redis.middleware.js": [
+        "this file takes care of the redis services of rate limiting\nwhere use redis->\n1)at login enddpoint -> cuz if unlimited amount of attempts given for a user to try login they\ncould try bruteforcing their way throught the user password\n2)at register endpoint -> cuz if unlimited amount of attempts given for a user they could try botting\nand creating multiples accounts for no reason\nwe put a limit to those based on time using redis\n\nredis property used -> createing a key value pair , incr and setting expiry for that if icr crosses value then too many attempts\n\nworking->\nfor login_Attempt -> we create a key value pair login_attempt: + ip_of_user\nso this then we incr its value for each attempt (as its a middleware can be put before login service)\nand we also set a expirty for it\nso if within that expiry time it crosses 10 times then its roo many attempts and return the user\nif he gets it then automatically after the period of time the key value pair expires\nnext() go next fn\n\nsame with register endpint also but more time given to allow for mistype of email etc"
+      ],
+      "middleware/schemas.js": [
+        "ZOD is used for req.body validation so here we jsut create the scehmas for each endpoint how should\nthe body be like for each"
+      ],
+      "middleware/validate.js": [
+        "this files basically runs a service that helps the takes schemas for endpoint and checks safetyp and\nvalidates the body"
+      ],
+      "modules/auth/auth.service.js": [
+        "this file contains the functions related to fn of user, these will later be used to create functions at each end point (ex register enpoint will have a fn where it takes user and password right thats will be written here thats all  so it would be endpoijnt regiter under that this register function easy)\nregister, login , refreshing token, log out\nworking of each ->\n1)register user -> needs input email and pass -> check if email exist -> if not -> hash the password -> save it in db -> return the user id\n2)login user -> get email and pass  -> check if email exist -> yes -> check password by bcrypt.compare -> if correct -> create accessToken,refresh token,hash refresh -> save it in\nrefresh token db along with familyId(uuid) and expires_at time\n3)refreshing the refresh -> here accessToken is refreshed -> we need refresh token to check -> innput is incomingtoken from cookies -> we\nwe hash compare this also and check if it exist -> if yes -> we get the userid -> now we need to give a new accessToken byu generate fn\nthe important thing in 3 is we do another thing also\nfamilyId and is revoked status is checked and refresh token is refreshed along with accessToken\nso basically when accessToken need refresh it hits this endpoint\nhere then refresh token is first checked (exists, not_revoked(that is check if its not old/used before)),expiry) if all checks passed\nthen it changes refresh token hashes and store it in db and the old refresh token's -> is_revoked thing -> becomes true -> signifying\nthe refresh token cant be used anymore as the revoked test it would fail\nFamily id fn -> the function of this is if attacker uses the refresh token before u then he gets a new refresh token -> which gives him a new\naccessToken also thus making u not have control till refresh token expires\nbut with family_id as the refresh_tokne the attacker gets used as status revoked then everry refresh token in that list witht the familyId\ngets revoked also so ull have to relogin but prevernts atatcker from using your account\n\n4)log out -> for log out -> need userID and token -> need user id cuz to log out that user yk -> the user id should be checked thru accessToken verification->\nwe again use refresh token to find the user by comparing hash ->after we get the user thru refresh tokekn -> we check or match it with our accessToken to fcheck if its the same uer ->if yes -> then when found -> we revoke his refresh token\n\nlearning -> IDOR pattern of attacking , XSS and cookie stealing , how to avoid and using family_id and appropriate checks"
+      ],
+      "utils/catchAsync.js": [
+        "this file kinda acts like the middleman of middleman kinda\nbasically all controller functions are wrapped in a layer of this fn\ncuz in those function we throw {status: message:} type thing during an error;\nso when it throws and error technically it should be caught like smth which does a yk next(err) type thing\nthats what this fn does when error it throws err so it becomes catchascync(fn) => next(err) -> which ends up calling\nthe error function we wrote in app.js so it takes care of that\nthis way is used as i saves us time to type the try catch block in each controller"
+      ],
+      "utils/tokenUtils.js": [
+        "this file takes care of the jwt process and functions\n1)create access\n2)verify access\n3)create refresh\n4)hash refresh\n\n1) -> this is done using jwt.sign -> creates a payload -> with secrte expirty and userId\n2) -> the token is then verified with the secret and if expired it expired cancel it if the decoding or whatever with secret doesnt work then also\ncancel but if it works then the token will output the userId it points to\n3) -> refresh token just a random string\n4) -> refrsh token is hashed as its stored in db -> its hashed in sha256"
+      ]
+    },
+    "error": null
+  },
+  "saltyip/emailqueue": {
+    "name": "Email Queue Service",
+    "repo": "saltyip/emailqueue",
+    "description": "BullMQ job queue with Gmail SMTP, retry logic, exponential backoff",
+    "status": "empty",
+    "files": {},
+    "error": null
+  },
+  "saltyip/urlshortnercongential": {
+    "name": "URL Shortener",
+    "repo": "saltyip/urlshortnercongential",
+    "description": "Express + PostgreSQL + Redis + Base62 encoding",
+    "status": "empty",
+    "files": {},
+    "error": null
+  }
+}
