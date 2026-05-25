@@ -53,6 +53,16 @@ const MOCK_DEVLOGS = {
       "created a high-performance Base62 encoder to transform auto-incrementing database IDs into short, URL-friendly strings.",
       "optimized SQL database queries by indexing the `short_code` field for fast lookups."
     ]
+  },
+  "saltyip/dns-resolver": {
+    "src/dns/parser.js": [
+      "constructed a binary packet parser to decode incoming UDP DNS queries. Bitwise operations and buffer slicing are beautiful but require byte-level precision.",
+      "learned that DNS names use a length-prefixed label format (e.g., \\`3www6google3com0\\`) rather than dot notation. Implemented a recursive decoder to reconstruct domain names."
+    ],
+    "src/server.js": [
+      "implemented a lightweight UDP socket server utilizing Node's \\`dgram\\` module to listen on port 53.",
+      "configured upstream query forwarding to Cloudflare (1.1.1.1) to resolve un-cached resource records recursively."
+    ]
   }
 };
 
@@ -145,9 +155,7 @@ const fetchProject = async (project) => {
       }
       
       // Try fallback to mock
-      const repoKeys = Object.keys(MOCK_DEVLOGS);
-      const projIndex = PROJECTS.findIndex(p => p.repo === repo);
-      const fallbackKey = repoKeys[projIndex >= 0 ? projIndex % repoKeys.length : 0];
+      const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
       
       if (MOCK_DEVLOGS[fallbackKey]) {
         console.log(`Using mock fallback for ${repo}`);
@@ -242,9 +250,7 @@ const fetchProject = async (project) => {
     console.error(`Error processing ${repo}:`, err.message);
     
     // Catch-all fallback to mock
-    const repoKeys = Object.keys(MOCK_DEVLOGS);
-    const projIndex = PROJECTS.findIndex(p => p.repo === repo);
-    const fallbackKey = repoKeys[projIndex >= 0 ? projIndex % repoKeys.length : 0];
+    const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
     
     if (MOCK_DEVLOGS[fallbackKey]) {
       console.log(`Using mock fallback for ${repo} due to error.`);

@@ -78,12 +78,31 @@ export default function Home() {
                   key={project.repo}
                   to={`/project/${folder}`}
                   className="home-project-card"
+                  style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
                 >
                   <div className="home-project-name">
                     <span className="home-project-icon">📁</span>
                     {folder}/
                   </div>
-                  <div className="home-project-desc">{project.description}</div>
+                  <div className="home-project-desc" style={{ flexGrow: 1 }}>{project.description}</div>
+                  {project.wip && (
+                    <div style={{ marginTop: '0.85rem', display: 'flex', alignItems: 'center' }}>
+                      <span style={{ 
+                        fontSize: '9px', 
+                        fontFamily: 'var(--font-mono)', 
+                        color: 'var(--color-peach)', 
+                        border: '1px solid rgba(250, 179, 135, 0.4)', 
+                        padding: '2px 6px', 
+                        borderRadius: '3px',
+                        textTransform: 'lowercase',
+                        opacity: 0.9,
+                        letterSpacing: '0.02em',
+                        boxShadow: '0 0 6px rgba(250, 179, 135, 0.15)'
+                      }}>
+                        work in progress
+                      </span>
+                    </div>
+                  )}
                 </Link>
               );
             })}

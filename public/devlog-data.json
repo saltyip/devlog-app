@@ -44,5 +44,22 @@
     "status": "empty",
     "files": {},
     "error": null
+  },
+  "saltyip/dns-resolver": {
+    "name": "DNS Resolver",
+    "repo": "saltyip/dns-resolver",
+    "description": "High-performance custom DNS server and packet resolver written from scratch",
+    "status": "success",
+    "files": {
+      "src/dns/parser.js": [
+        "constructed a binary packet parser to decode incoming UDP DNS queries. Bitwise operations and buffer slicing are beautiful but require byte-level precision.",
+        "learned that DNS names use a length-prefixed label format (e.g., \\`3www6google3com0\\`) rather than dot notation. Implemented a recursive decoder to reconstruct domain names."
+      ],
+      "src/server.js": [
+        "implemented a lightweight UDP socket server utilizing Node's \\`dgram\\` module to listen on port 53.",
+        "configured upstream query forwarding to Cloudflare (1.1.1.1) to resolve un-cached resource records recursively."
+      ]
+    },
+    "error": null
   }
 }

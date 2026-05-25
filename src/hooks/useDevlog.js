@@ -23,6 +23,16 @@ const MOCK_DEVLOGS = {
       "created a high-performance Base62 encoder to transform auto-incrementing database IDs into short, URL-friendly strings.",
       "optimized SQL database queries by indexing the `short_code` field for fast lookups."
     ]
+  },
+  "saltyip/dns-resolver": {
+    "src/dns/parser.js": [
+      "constructed a binary packet parser to decode incoming UDP DNS queries. Bitwise operations and buffer slicing are beautiful but require byte-level precision.",
+      "learned that DNS names use a length-prefixed label format (e.g., \\`3www6google3com0\\`) rather than dot notation. Implemented a recursive decoder to reconstruct domain names."
+    ],
+    "src/server.js": [
+      "implemented a lightweight UDP socket server utilizing Node's \\`dgram\\` module to listen on port 53.",
+      "configured upstream query forwarding to Cloudflare (1.1.1.1) to resolve un-cached resource records recursively."
+    ]
   }
 };
 
@@ -31,9 +41,7 @@ export const useDevlog = () => {
     const initial = {};
     PROJECTS.forEach(p => {
       initial[p.repo] = {
-        name: p.name,
-        repo: p.repo,
-        description: p.description,
+        ...p,
         status: 'loading',
         files: {},
         error: null,
@@ -56,9 +64,7 @@ export const useDevlog = () => {
         PROJECTS.forEach(p => {
           if (data[p.repo]) {
             nextState[p.repo] = {
-              name: p.name,
-              repo: p.repo,
-              description: p.description,
+              ...p,
               status: data[p.repo].status || 'success',
               files: data[p.repo].files || {},
               error: data[p.repo].error || null,
@@ -66,9 +72,7 @@ export const useDevlog = () => {
           } else {
             // Configured project wasn't parsed in the build script
             nextState[p.repo] = {
-              name: p.name,
-              repo: p.repo,
-              description: p.description,
+              ...p,
               status: 'empty',
               files: {},
               error: null,
@@ -85,11 +89,9 @@ export const useDevlog = () => {
         const nextState = { ...prev };
         const repoKeys = Object.keys(MOCK_DEVLOGS);
         PROJECTS.forEach((p, index) => {
-          const fallbackKey = repoKeys[index % repoKeys.length];
+          const fallbackKey = MOCK_DEVLOGS[p.repo] ? p.repo : repoKeys[index % repoKeys.length];
           nextState[p.repo] = {
-            name: p.name,
-            repo: p.repo,
-            description: p.description,
+            ...p,
             status: 'success',
             files: MOCK_DEVLOGS[fallbackKey],
             error: null,

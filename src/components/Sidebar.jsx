@@ -42,6 +42,11 @@ export default function Sidebar({ projects, activeRepo }) {
                   <span className="tree-branch">{treePrefix}</span>
                   <span className="tree-folder-icon">📁 </span>
                   <span className="tree-folder-name">{folderName}</span>
+                  {project.wip && (
+                    <span style={{ fontSize: '9px', color: 'var(--color-peach)', marginLeft: '0.4rem', opacity: 0.8, fontWeight: 'bold' }}>
+                      [wip]
+                    </span>
+                  )}
                   <span 
                     className={`project-status ${project.status}`} 
                     title={`Status: ${project.status}`} 
