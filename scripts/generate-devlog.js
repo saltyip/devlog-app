@@ -6,78 +6,13 @@ import { PROJECTS } from '../src/config.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outputPath = path.resolve(__dirname, '../public/devlog-data.json');
 
-const loadDotEnv = () => {
-  try {
-    const envPath = path.resolve(__dirname, '../.env');
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf-8');
-      content.split('\n').forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-          const firstEqual = trimmed.indexOf('=');
-          if (firstEqual !== -1) {
-            const key = trimmed.slice(0, firstEqual).trim();
-            const val = trimmed.slice(firstEqual + 1).trim().replace(/^['"]|['"]$/g, '');
-            // ONLY set it if the variable is not already defined in the OS environment and is not empty
-            if (val && !process.env[key]) {
-              process.env[key] = val;
-            }
-          }
-        }
-      });
-    }
-  } catch (err) {
-    // ignore
-  }
-};
+// No tokens, no secrets. All repos are public.
+// File content is fetched via raw.githubusercontent.com (CDN, no rate limits).
+// Tree listing uses the unauthenticated GitHub API (60 req/hr — plenty for a few projects).
 
-loadDotEnv();
-
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.VITE_GITHUB_TOKEN;
-
-const MOCK_DEVLOGS = {
-  "saltyip/jwt-redis-auth-api": {
-    "src/middleware/auth.js": [
-      "learned that JWT refresh rotation needs to be atomic — if you issue a new token but the old one isn't invalidated yet, there's a replay window. Redis `SETNX` fixes this.",
-      "implemented sliding window rate limiting on authentication routes to prevent brute force attacks."
-    ],
-    "src/db/redis.js": [
-      "configured Redis connection pool with automatic reconnection and failover handling."
-    ]
-  },
-  "saltyip/email-queue-service": {
-    "src/queue/email.worker.js": [
-      "switched from simple `nodemailer` to `BullMQ` for managing background SMTP jobs. Retries are now queued automatically.",
-      "added exponential backoff delay to SMTP failures to avoid email server rate limiting."
-    ]
-  },
-  "saltyip/url-shortener": {
-    "src/services/encoder.js": [
-      "created a high-performance Base62 encoder to transform auto-incrementing database IDs into short, URL-friendly strings.",
-      "optimized SQL database queries by indexing the `short_code` field for fast lookups."
-    ]
-  },
-  "saltyip/dns-resolver": {
-    "src/dns/parser.js": [
-      "constructed a binary packet parser to decode incoming UDP DNS queries. Bitwise operations and buffer slicing are beautiful but require byte-level precision.",
-      "learned that DNS names use a length-prefixed label format (e.g., \\`3www6google3com0\\`) rather than dot notation. Implemented a recursive decoder to reconstruct domain names."
-    ],
-    "src/server.js": [
-      "implemented a lightweight UDP socket server utilizing Node's \\`dgram\\` module to listen on port 53.",
-      "configured upstream query forwarding to Cloudflare (1.1.1.1) to resolve un-cached resource records recursively."
-    ]
-  }
-};
-
-const getHeaders = () => {
-  const headers = {
-    'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'devlog-builder'
-  };
-  if (GITHUB_TOKEN) {
-    headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
-  }
-  return headers;
+const HEADERS = {
+  'Accept': 'application/vnd.github.v3+json',
+  'User-Agent': 'devlog-builder'
 };
 
 const isSourceFile = (filePath) => {
@@ -147,32 +82,12 @@ const fetchProject = async (project) => {
       throw new Error(`Invalid repository format in config: ${repo}`);
     }
 
+    // 1. Get the file tree (unauthenticated, 60 req/hr)
     const treeUrl = `https://api.github.com/repos/${owner}/${repoName}/git/trees/HEAD?recursive=1`;
-    const response = await fetch(treeUrl, { headers: getHeaders() });
+    const response = await fetch(treeUrl, { headers: HEADERS });
 
     if (!response.ok) {
-      console.warn(`GitHub API request failed for ${repo} (${response.status}: ${response.statusText}).`);
-      
-      if (response.status === 403 || response.status === 401) {
-        console.warn("Hint: Make sure GITHUB_TOKEN is configured correctly in environment variables.");
-      }
-      
-      // ONLY fallback to mock if NO token is configured!
-      if (!GITHUB_TOKEN) {
-        const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
-        if (MOCK_DEVLOGS[fallbackKey]) {
-          console.log(`Using mock fallback for ${repo}`);
-          return {
-            name,
-            repo,
-            description,
-            status: 'success',
-            files: MOCK_DEVLOGS[fallbackKey],
-            error: null,
-          };
-        }
-      }
-      throw new Error(`GitHub API returned ${response.status}: ${response.statusText || 'Not Found'}`);
+      throw new Error(`GitHub API returned ${response.status}: ${response.statusText || 'Unknown'}`);
     }
 
     const data = await response.json();
@@ -190,36 +105,18 @@ const fetchProject = async (project) => {
     console.log(`Found ${sourceFiles.length} candidate source files. Parsing...`);
     const filesData = {};
 
+    // 2. Fetch each file via raw.githubusercontent.com (CDN — no rate limits, no auth)
     const fileContentPromises = sourceFiles.map(async (file) => {
       try {
-        let content = '';
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/HEAD/${file.path}`;
+        const fileRes = await fetch(rawUrl);
 
-        // 1. Try raw.githubusercontent.com
-        try {
-          const rawUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/HEAD/${file.path}`;
-          const fileRes = await fetch(rawUrl);
-          if (fileRes.ok) {
-            content = await fileRes.text();
-          }
-        } catch (e) {
-          // ignore, fallback to git API
+        if (!fileRes.ok) {
+          console.warn(`  Could not fetch ${file.path} (${fileRes.status})`);
+          return null;
         }
 
-        // 2. Fallback to official Git Blobs API if raw fails
-        if (!content) {
-          const blobUrl = `https://api.github.com/repos/${owner}/${repoName}/git/blobs/${file.sha}`;
-          const blobRes = await fetch(blobUrl, { headers: getHeaders() });
-          if (blobRes.ok) {
-            const blobData = await blobRes.json();
-            if (blobData.encoding === 'base64') {
-              // Safe base64 decoding in Node.js
-              content = Buffer.from(blobData.content, 'base64').toString('utf-8');
-            } else {
-              content = blobData.content;
-            }
-          }
-        }
-
+        const content = await fileRes.text();
         if (content) {
           const entries = extractBlogComments(content);
           if (entries && entries.length > 0) {
@@ -252,23 +149,6 @@ const fetchProject = async (project) => {
     };
   } catch (err) {
     console.error(`Error processing ${repo}:`, err.message);
-    
-    // ONLY fallback to mock if NO token is configured!
-    if (!GITHUB_TOKEN) {
-      const fallbackKey = MOCK_DEVLOGS[repo] ? repo : Object.keys(MOCK_DEVLOGS)[PROJECTS.findIndex(p => p.repo === repo) % Object.keys(MOCK_DEVLOGS).length];
-      if (MOCK_DEVLOGS[fallbackKey]) {
-        console.log(`Using mock fallback for ${repo} due to error.`);
-        return {
-          name,
-          repo,
-          description,
-          status: 'success',
-          files: MOCK_DEVLOGS[fallbackKey],
-          error: null,
-        };
-      }
-    }
-
     return {
       name,
       repo,
@@ -282,11 +162,7 @@ const fetchProject = async (project) => {
 
 const main = async () => {
   console.log("Starting build-time devlog generation...");
-  if (!GITHUB_TOKEN) {
-    console.warn("\n⚠️ WARNING: Neither GITHUB_TOKEN nor VITE_GITHUB_TOKEN was found in your environment.");
-    console.warn("The script will try to fetch publicly available data, but may hit rate limits or fail to read private repos.");
-    console.warn("To resolve this, set GITHUB_TOKEN as an environment variable in your Vercel/deployment project or local shell.\n");
-  }
+  console.log(`Processing ${PROJECTS.length} public repositories.\n`);
 
   const results = {};
   for (const project of PROJECTS) {
