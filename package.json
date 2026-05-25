@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "generate": "node scripts/generate-devlog.js",
-    "build": "npm run generate && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

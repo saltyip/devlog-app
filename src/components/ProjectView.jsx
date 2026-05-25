@@ -1,4 +1,3 @@
-import React from 'react';
 import FileSection from './FileSection';
 
 const getFolderName = (repo) => {
@@ -51,7 +50,7 @@ export default function ProjectView({ project, onRefresh }) {
     );
   }
 
-  const { name, repo, description, status, files, error, wip } = project;
+  const { repo, description, status, files, error } = project;
   const folderName = getFolderName(repo);
 
   // Calculate metadata stats
@@ -82,25 +81,6 @@ export default function ProjectView({ project, onRefresh }) {
             <span className="meta-label">description: </span>
             <span className="meta-value">{description}</span>
           </div>
-          {wip && (
-            <div className="terminal-meta-line" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="meta-label">status: </span>
-              <span style={{ 
-                fontSize: '10px', 
-                fontFamily: 'var(--font-mono)', 
-                color: 'var(--color-peach)', 
-                border: '1px solid rgba(250, 179, 135, 0.4)', 
-                padding: '2px 6px', 
-                borderRadius: '3px',
-                textTransform: 'lowercase',
-                opacity: 0.9,
-                letterSpacing: '0.02em',
-                boxShadow: '0 0 6px rgba(250, 179, 135, 0.15)'
-              }}>
-                work in progress
-              </span>
-            </div>
-          )}
           {status === 'success' && (
             <div className="terminal-meta-line">
               <span className="meta-label">stats: </span>

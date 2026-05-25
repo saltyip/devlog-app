@@ -33,8 +33,12 @@
     "name": "Email Queue Service",
     "repo": "saltyip/emailqueue",
     "description": "BullMQ job queue with Gmail SMTP, retry logic, exponential backoff",
-    "status": "empty",
-    "files": {},
+    "status": "success",
+    "files": {
+      "worker.js": [
+        "this file basically its like creating a Worker function that like tells what do with the a job yk like take its this this data then put it in transpoerter etc etc what to do if the thing completes or fails\nPOST /send-email\n↓\nemailQueue.add()\n↓\nRedis\n↓\nworkerorker.js\n↓\nnodemailer sends email"
+      ]
+    },
     "error": null
   },
   "saltyip/urlshortnercongential": {

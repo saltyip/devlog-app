@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './styles/global.css';
 import { PROJECTS } from './config';

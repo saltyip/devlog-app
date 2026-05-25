@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Format inline code wrapped in backticks to code tags for developer aesthetics
 const formatTextWithCode = (text) => {

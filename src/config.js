@@ -3,4 +3,3 @@ export const PROJECTS = [
   { name: "Email Queue Service", repo: "saltyip/emailqueue", description: "BullMQ job queue with Gmail SMTP, retry logic, exponential backoff" },
   { name: "URL Shortener", repo: "saltyip/urlshortnercongential", description: "Express + PostgreSQL + Redis + Base62 encoding" },
 ]
-
