@@ -18,7 +18,10 @@ const loadDotEnv = () => {
           if (firstEqual !== -1) {
             const key = trimmed.slice(0, firstEqual).trim();
             const val = trimmed.slice(firstEqual + 1).trim().replace(/^['"]|['"]$/g, '');
-            process.env[key] = val;
+            // ONLY set it if the variable is not already defined in the OS environment and is not empty
+            if (val && !process.env[key]) {
+              process.env[key] = val;
+            }
           }
         }
       });
