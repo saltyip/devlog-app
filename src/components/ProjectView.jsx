@@ -1,9 +1,5 @@
 import FileSection from './FileSection';
-
-const getFolderName = (repo) => {
-  const parts = repo.split('/');
-  return parts.length > 1 ? parts[1] : repo;
-};
+import { getFolderName } from '../utils';
 
 const LoadingSkeleton = () => (
   <div className="terminal-skeleton">

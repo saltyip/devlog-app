@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PROJECTS } from '../config';
-
-const getFolderName = (repo) => {
-  const parts = repo.split('/');
-  return parts.length > 1 ? parts[1] : repo;
-};
+import { getFolderName } from '../utils';
 
 export default function Home() {
   return (

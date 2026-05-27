@@ -7,6 +7,8 @@ import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import Home from './components/Home';
 import DevlogHeader from './components/DevlogHeader';
+import NotFound from './components/NotFound';
+import { getFolderName } from './utils';
 
 function AppContent({ projects, refreshProject }) {
   const location = useLocation();
@@ -16,11 +18,7 @@ function AppContent({ projects, refreshProject }) {
   const repoName = pathParts[1] === 'project' ? pathParts[2] : '';
 
   // Find the repo from the folder name (second part of repo path)
-  const activeRepo = PROJECTS.find(p => {
-    const parts = p.repo.split('/');
-    const folder = parts.length > 1 ? parts[1] : p.repo;
-    return folder === repoName;
-  })?.repo || '';
+  const activeRepo = PROJECTS.find(p => getFolderName(p.repo) === repoName)?.repo || '';
 
   const activeProject = projects[activeRepo];
 
@@ -42,8 +40,8 @@ function AppContent({ projects, refreshProject }) {
               />
             } 
           />
-          {/* Fallback to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Fallback to 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>

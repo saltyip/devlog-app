@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom';
+import { getFolderName } from '../utils';
 
 export default function Sidebar({ projects, activeRepo }) {
   const projectList = Object.values(projects);
-
-  const getFolderName = (repo) => {
-    const parts = repo.split('/');
-    return parts.length > 1 ? parts[1] : repo;
-  };
 
   return (
     <>
@@ -74,6 +70,13 @@ export default function Sidebar({ projects, activeRepo }) {
           </Link>
         </div>
         <div className="mobile-tabs">
+          <Link
+            to="/"
+            className={`mobile-tab-btn ${!activeRepo ? 'active' : ''}`}
+            aria-label="Home"
+          >
+            ~/
+          </Link>
           {projectList.map((project) => {
             const isActive = project.repo === activeRepo;
             const folderName = getFolderName(project.repo);
